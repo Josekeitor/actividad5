@@ -10,11 +10,11 @@
 #define TCP_PORT 8000
 
 typedef struct {
-    int ** days;
+    short ** days;
 } sensor;
 
 int main(int argc, const char * argv[]) {
-    char buffer[5];
+    short buffer;
 
 
     struct sockaddr_in direccion;
@@ -25,8 +25,8 @@ int main(int argc, const char * argv[]) {
     ssize_t leidos, escritos;
     int continuar = 1;
     pid_t pid;
-
-    int *shared;
+    int sensor_count = 0;
+    sensor *shared;
     int shmid;
 
 
@@ -63,15 +63,15 @@ int main(int argc, const char * argv[]) {
         pid = fork();
 
         if (pid == 0) continuar = 0;
-
     }
 
     if (pid == 0) {
+        sensor_count ++;
         close(servidor);
         int reading_count = 0;
         int days_count = 0;
         shared = shmat(shmid, (void *) 0, 0);
-        s
+        printf("Dias %d, lecturas %d \n", days_count, reading_count);
         if(cliente >= 0) {
             short ** days = (short **) malloc(30 * sizeof(int ));
 
@@ -80,26 +80,36 @@ int main(int argc, const char * argv[]) {
             for (; aux < end; aux++ ){
                 aux = (short *) malloc(10 * sizeof(int));
             }
+            int read_bytes;
+            while ((read_bytes = read(cliente, &buffer, sizeof(buffer))) > 0){
+                if(read_bytes == sizeof(buffer)) {
+                    if (reading_count == 5) {
+                        days_count ++;
+                        reading_count = 0;
+                        printf("Me movi de dia %d\n", days_count);
+                    }
+                    printf("recibi: %d en el servidor\n", buffer);
+                    printf("Read %d", read_bytes);
+                    reading_count ++;
 
-            while (leidos = read(cliente, &buffer, sizeof(buffer))){
-                if (reading_count == 5) {
-                    days_count ++;
-                    reading_count = 0;
-                    printf("Me movi de dia %d\n", days_count);
+                    *(*(days + days_count) + reading_count) = buffer;
+
+                    *(shared + sensor_count)->days = days;
                 }
-                printf("leidos %zd\n", leidos);
-                printf("read: %s\n", buffer);
-                reading_count ++;
 
-                *(*(days + days_count) + reading_count) = (short) buffer;
             }
 
-
+            aux = days;
+            end = (days + 30);
+            for (; aux < end; aux++ ){
+                short * aux_in = *aux;
+                short * end_in = aux_in + 10;
+                for(; aux_in < end_in; aux_in++){
+                    free(aux_in);
+                }
+                free(aux);
+            }
         }
-
-
-
-
         exit(0);
     } else {
         sensor * sensors = malloc(5 * sizeof(sensor));

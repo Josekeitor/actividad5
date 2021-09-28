@@ -83,7 +83,7 @@ int main(int argc, const char * argv[]) {
         printf("Enviando %d al servidor central\n", reading);
         // Escribir datos en el socket
         write(cliente, &buffer, sizeof(buffer));
-        sleep(1);
+        sleep(3);
     }
 
     close(cliente);
