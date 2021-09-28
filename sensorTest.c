@@ -50,7 +50,7 @@ int getRandomNum(int max)
 int main(int argc, const char * argv[]) {
 
     struct sockaddr_in direccion;
-    char buffer[1000];
+    char buffer[5];
 
     int cliente;
 
@@ -69,32 +69,24 @@ int main(int argc, const char * argv[]) {
     direccion.sin_port = htons(TCP_PORT);
     direccion.sin_family = AF_INET;
     inet_aton(argv[1], &direccion.sin_addr);
-
+    printf("dirección: %s \n", argv[1]);
     /* Establecer la conexión con el servidor */
     int estado = connect(cliente, (struct sockaddr *) &direccion, sizeof(direccion));
-
-    if(estado == 0) {
-        printf("Conexión establecida al servidor central");
-        int days = 0;
-        int readings = 0;
-        while (days < 31) {
-            sleep(3);
-            if (readings == 10) {
-                days += 1;
-            }
-            readings += 1;
-            int reading = getRandomNum(MAX);
-
-            itoa(reading, buffer);
-
-            printf("buffer: %s", buffer);
-            // Escribir datos en el socket
-            write(cliente, buffer, sizeof(buffer));
-
-            itoa(days, buffer);
-            write(cliente, buffer, sizeof(buffer));
-        }
+    printf("estado %d \n", estado);
+    if(estado == -1) {
+        printf("Error en la conexión\n");
     }
+
+    printf("Conexión establecida al servidor central\n");
+    while (1) {
+        short reading = (short) (rand() % 256);
+        printf("Enviando %d al servidor central\n", reading);
+        // Escribir datos en el socket
+        write(cliente, &buffer, sizeof(buffer));
+        sleep(1);
+    }
+
+    close(cliente);
 
 
     return 0;
